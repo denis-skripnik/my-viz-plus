@@ -8,6 +8,11 @@ var api_nodes=[
 var default_api_node=api_nodes[0];
 var api_nodes_addon={'list':[]};
 
+var dao_request_ranges=[[1,54],[3759,99999]];
+
+var invite_user='invite';
+var invite_active_key='5KcfoRuDfkhrLCxVcE9x51J6KN9aM9fpb78tLrvvFckxVV6FyFW';
+
 var standalone=false;
 var standalone_fullpath='';
 var standalone_path='';
@@ -121,13 +126,17 @@ var ltmp_arr={
 	index_add_node_caption:'Добавить ноду:',
 	index_add_node_button:'Подтвердить',
 
+	/* Manage Profile */
+	save_profile_success:'Профиль успешно сохранен',
+
 	/* Access */
 	access_remove_caption:'удалить',
 	access_weight_caption:'вес %weight%',
 	access_need_regular_weight:'Суммарный вес для обычного типа доступа меньше необходимого',
 	access_need_active_weight:'Суммарный вес для активного типа доступа меньше необходимого',
 	access_need_master_weight:'Суммарный вес для главного типа доступа меньше необходимого',
-	access_saved_successfully:'Схема доступа успешно сохранена, обязательно скопируйте новые ключи.',
+	access_saved_successfully:'Схема доступа успешно сохранена',
+	access_save_keys:', обязательно скопируйте новые ключи',
 	access_error:'Ошибка в запросе, проверьте главный ключ и попробуйте позже',
 	access_invalid_master_weight_threshold:'Необходимый вес для главного типа доступа недействительный',
 	access_invalid_active_weight_threshold:'Необходимый вес для активного типа доступа недействительный',
@@ -164,17 +173,20 @@ var ltmp_arr={
 	delegation_success:'Делегирование успешно выполнено',
 
 	/* Fund */
+	fund_request_vote_list_from:' от ',
+	fund_request_vote_list_shares_amount:' эффективный капитал: ',
 	fund_request_votes_count:'Всего голосов: ',
 	fund_request_votes_shares_amount:'Доля проголосовавших от всей сети: ',
 	fund_request_votes_shares_required:'требуется',
 	fund_request_calculated_amount:'Рассчитанная сумма заявки на текущий момент: ',
 	fund_request_title_caption:'Заявка #<span class="request-id">%id%</span>',
 	fund_request_start_time_caption:'Создана: ',
+	fund_request_cancel_caption:'Отменить заявку',
 	fund_request_descr_caption:'Наименование: ',
 	fund_request_url_caption:'Ссылка: ',
 	fund_request_creator_caption:'Заявитель: ',
 	fund_request_worker_caption:'Исполнитель: ',
-	fund_request_min_amount_caption:'Минимальная сумма исполнения заявки: : ',
+	fund_request_min_amount_caption:'Минимальная сумма исполнения заявки: ',
 	fund_request_max_amount_caption:'Запрашиваемая сумма: ',
 	fund_request_conclusion_time_caption:'Время рассмотрения: ',
 	fund_request_end_time_caption:'Время завершения: ',
@@ -202,7 +214,7 @@ var ltmp_arr={
 		create_account_delegation_time:'Срок делегирования при создании аккаунта (в секундах)',
 		bandwidth_reserve_percent:'Доля сети, выделяемая для резервной пропускной способности',
 		bandwidth_reserve_below:'Резервная пропускная способность действует для аккаунтов с долей сети до порога',
-		committee_request_approve_min_percent:'Минимальный процент суммы социального капитала, необходимый для принятия решения по заявке в Фонде ДАО',
+		committee_request_approve_min_percent:'Минимальная доля совокупного социального капитала для решения по заявке в Фонде ДАО',
 		min_delegation:'Минимальное количество токенов при делегировании',
 		vote_accounting_min_rshares:'Минимальный вес голоса для учёта при награждении (reward shares)',
 		maximum_block_size:'Максимальный размер блока в сети (в байтах)',
@@ -211,8 +223,45 @@ var ltmp_arr={
 		inflation_recalc_period:'Количество блоков между пересчётом инфляционной модели',
 		data_operations_cost_additional_bandwidth:'Дополнительная наценка пропускной способности за каждую data операцию в транзакции',
 		witness_miss_penalty_percent:'Штраф делегату за пропуск блока в процентах от суммарного веса голосов',
-		witness_miss_penalty_duration:'Длительность штрафа делегату за пропуск блока в секундах'
+		witness_miss_penalty_duration:'Длительность штрафа делегату за пропуск блока в секундах',
+		create_invite_min_balance:'Минимальная сумма чека',
+		committee_create_request_fee:'Плата за создание заявки в Фонд ДАО',
+		create_paid_subscription_fee:'Плата за создание платной подписки',
+		account_on_sale_fee:'Плата за выставление аккаунта на продажу',
+		subaccount_on_sale_fee:'Плата за выставление субаккаунтов на продажу',
+		witness_declaration_fee:'Плата за объявление аккаунта делегатом',
+		withdraw_intervals:'Количество периодов (дней) уменьшения капитала',
 	},
+
+	/* Witness props order on manage page*/
+	witness_props_order:[
+		'maximum_block_size',
+		'account_creation_fee',
+		'create_account_delegation_ratio',
+		'create_account_delegation_time',
+		'min_delegation',
+		'create_invite_min_balance',
+		'bandwidth_reserve_percent',
+		'bandwidth_reserve_below',
+		'vote_accounting_min_rshares',
+		'withdraw_intervals',
+		'committee_request_approve_min_percent',
+		'inflation_witness_percent',
+		'inflation_ratio_committee_vs_reward_fund',
+		'inflation_recalc_period',
+		'data_operations_cost_additional_bandwidth',
+		'witness_miss_penalty_percent',
+		'witness_miss_penalty_duration',
+		'committee_create_request_fee',
+		'create_paid_subscription_fee',
+		'account_on_sale_fee',
+		'subaccount_on_sale_fee',
+		'witness_declaration_fee',
+		//deprecated:
+		'min_curation_percent',
+		'max_curation_percent',
+		'flag_energy_additional_cost',
+	],
 
 	/* Committee requests status*/
 	request_status_arr:{
@@ -248,6 +297,7 @@ var ltmp_arr={
 	history_receive_award:'Получена награда <span class="view-tokens">%shares%</span> от <span class="view-account">%initiator%</span>',
 	history_create_invite:'Выписан чек на <span class="view-tokens">%tokens%</span> с кодом проверки <span class="view-key">%key%</span>',
 	history_claim_invite_balance:'Погашен чек с кодом <span class="view-key">%key%</span>',
+	history_use_invite_balance:'Погашен чек с кодом <span class="view-key">%key%</span>',
 	history_transfer_from:'<span class="view-tokens">%tokens%</span> отправлено <span class="view-account">%to%</span>',
 	history_transfer_to:'<span class="view-tokens">%tokens%</span> получено от <span class="view-account">%from%</span>',
 	history_transfer_memo:' с заметкой ',
@@ -325,6 +375,10 @@ var ltmp_arr={
 	transfer_success:'Перевод успешно выполнен',
 	withdraw_success:'Уменьшение капитала подтверждено',
 	stop_withdraw_error:'Ошибка в операции остановки',
+
+	/* Market menu */
+	create_paid_subscribe_caption:'Создать',
+	edit_paid_subscribe_caption:'Изменить',
 
 	/* Default captions */
 	default_operation_error:'Ошибка при подтверждении операции',
@@ -505,7 +559,14 @@ var witness_props_captions={
 	'inflation_recalc_period':ltmp_arr.witness_props_captions.inflation_recalc_period,
 	'data_operations_cost_additional_bandwidth':ltmp_arr.witness_props_captions.data_operations_cost_additional_bandwidth,
 	'witness_miss_penalty_percent':ltmp_arr.witness_props_captions.witness_miss_penalty_percent,
-	'witness_miss_penalty_duration':ltmp_arr.witness_props_captions.witness_miss_penalty_duration
+	'witness_miss_penalty_duration':ltmp_arr.witness_props_captions.witness_miss_penalty_duration,
+	'create_invite_min_balance':ltmp_arr.witness_props_captions.create_invite_min_balance,
+	'committee_create_request_fee':ltmp_arr.witness_props_captions.committee_create_request_fee,
+	'create_paid_subscription_fee':ltmp_arr.witness_props_captions.create_paid_subscription_fee,
+	'account_on_sale_fee':ltmp_arr.witness_props_captions.account_on_sale_fee,
+	'subaccount_on_sale_fee':ltmp_arr.witness_props_captions.subaccount_on_sale_fee,
+	'witness_declaration_fee':ltmp_arr.witness_props_captions.witness_declaration_fee,
+	'withdraw_intervals':ltmp_arr.witness_props_captions.withdraw_intervals,
 };
 var witness_props_percent=['bandwidth_reserve_percent','committee_request_approve_min_percent','inflation_witness_percent','inflation_ratio_committee_vs_reward_fund','data_operations_cost_additional_bandwidth','witness_miss_penalty_percent'];
 var request_status_arr={
@@ -542,6 +603,9 @@ function update_chain_properties(){
 		if(!err){
 			if('block'==$('.section-fund-request').css('display')){
 				$('.section-fund-request .chain-properties[rel=committee_request_approve_min_percent]').html(parseInt(response.committee_request_approve_min_percent)/100);
+			}
+			if('block'==$('.page-checks').css('display')){
+				$('.page-checks .create-invite-min-balance').html(show_balance_in_tokens(response.create_invite_min_balance,true));
 			}
 		}
 	});
@@ -1746,6 +1810,23 @@ function view_market(path,params,title){
 					}
 				}
 				if('create-paid-subscribe'==path[2]){
+					$('.create-edit-paid-subscribe-caption').html('&hellip;');
+					viz.api.getPaidSubscriptionOptions(current_user,function(err,response){
+						if(err){
+							$('.create-edit-paid-subscribe-caption').html(ltmp_arr.create_paid_subscribe_caption);
+						}
+						else{
+							$('.create-edit-paid-subscribe-caption').html(ltmp_arr.edit_paid_subscribe_caption);
+						}
+					});
+
+					$('.page-create-paid-subscribe .fee-checkbox').css('display','none');
+					viz.api.getChainProperties(function(err,response){
+						if(!err){
+							$('.median-props[rel="create_paid_subscription_fee"]').html(show_price_in_tokens(response.create_paid_subscription_fee,true));
+						}
+					});
+
 					$('.page-create-paid-subscribe .current_user').html(current_user);
 					$('.page-create-paid-subscribe .create-paid-subscribe-error').html('');
 					$('.page-create-paid-subscribe .create-paid-subscribe-success').html('');
@@ -1786,7 +1867,10 @@ function view_market(path,params,title){
 							}
 						}
 						else{
-							console.log(err);
+							//console.log(JSON.stringify(err));
+							if(-1!=JSON.stringify(err).indexOf('Paid subscription not found')){
+								$('.page-create-paid-subscribe .fee-checkbox').css('display','block');
+							}
 						}
 					});
 				}
@@ -1959,6 +2043,30 @@ function view_market(path,params,title){
 					$('.view-'+path[1]+' .page-'+path[2]+' .current_user').html(current_user);
 					//$('.view-'+path[1]+' .page-'+path[2]+' input[name="set-account-login"]').val(current_user);
 
+					$('.page-sell-account .fee-checkbox').css('display','none');
+					viz.api.getChainProperties(function(err,response){
+						if(!err){
+							$('.median-props[rel="account_on_sale_fee"]').html(show_price_in_tokens(response.account_on_sale_fee,true));
+						}
+					});
+					$('.page-sell-account input[name="set-account-login"]').val(current_user);
+					$('.page-sell-account input[name="set-account-master-key"]').val('');
+					$('.page-sell-account input[name="set-account-seller"]').val('');
+					$('.page-sell-account input[name="set-account-price"]').val('');
+					viz.api.getAccounts([current_user],function(err,response){
+						if(typeof response[0] != 'undefined'){
+							if(response[0].name==current_user){
+								if(''==response[0].account_seller){
+									$('.page-sell-account .fee-checkbox').css('display','block');
+								}
+								else{
+									$('.page-sell-account input[name="set-account-seller"]').val(response[0].account_seller);
+									$('.page-sell-account input[name="set-account-price"]').val(response[0].account_offer_price);
+								}
+							}
+						}
+					});
+
 					$('.page-sell-account input[name=set-account-seller]').unbind('keypress');
 					$('.page-sell-account input[name=set-account-seller]').bind('keypress',function(e){
 						if(!e)e=window.event;
@@ -2018,6 +2126,31 @@ function view_market(path,params,title){
 
 				if('sell-subaccount'==path[2]){
 					$('.view-'+path[1]+' .page-'+path[2]+' .current_user').html(current_user);
+
+					$('.page-sell-subaccount .fee-checkbox').css('display','none');
+					viz.api.getChainProperties(function(err,response){
+						if(!err){
+							$('.median-props[rel="subaccount_on_sale_fee"]').html(show_price_in_tokens(response.subaccount_on_sale_fee,true));
+						}
+					});
+					$('.page-sell-subaccount input[name="set-subaccount-login"]').val(current_user);
+					$('.page-sell-subaccount input[name="set-subaccount-master-key"]').val('');
+					$('.page-sell-subaccount input[name="set-subaccount-seller"]').val('');
+					$('.page-sell-subaccount input[name="set-subaccount-price"]').val('');
+					viz.api.getAccounts([current_user],function(err,response){
+						if(typeof response[0] != 'undefined'){
+							if(response[0].name==current_user){
+								if(''==response[0].subaccount_seller){
+									$('.page-sell-subaccount .fee-checkbox').css('display','block');
+								}
+								else{
+									$('.page-sell-subaccount input[name="set-subaccount-seller"]').val(response[0].subaccount_seller);
+									$('.page-sell-subaccount input[name="set-subaccount-price"]').val(response[0].subaccount_offer_price);
+								}
+							}
+						}
+					});
+
 					$('.page-sell-subaccount input[name=set-subaccount-seller]').unbind('keypress');
 					$('.page-sell-subaccount input[name=set-subaccount-seller]').bind('keypress',function(e){
 						if(!e)e=window.event;
@@ -2079,6 +2212,16 @@ function view_market(path,params,title){
 		}
 		if(0<$('.view-'+path[1]+' .page-index').length){
 			$('.view-'+path[1]+' .page-index').css('display','block');
+
+			$('.create-edit-paid-subscribe-caption').html('&hellip;');
+			viz.api.getPaidSubscriptionOptions(current_user,function(err,response){
+				if(err){
+					$('.create-edit-paid-subscribe-caption').html(ltmp_arr.create_paid_subscribe_caption);
+				}
+				else{
+					$('.create-edit-paid-subscribe-caption').html(ltmp_arr.edit_paid_subscribe_caption);
+				}
+			});
 		}
 	}
 }
@@ -2196,7 +2339,101 @@ function view_accounts(path,params,title){
 						check_login_timer=setTimeout(check_login,500,$('.page-create-subaccount input[name=create-subaccount-login]'),$('.page-create-subaccount .create-subaccount-available'));
 					});
 				}
+				if('manage-profile'==path[2]){
+					$('.page-manage-profile input[name=manage-profile-nickname]').val('');
+					$('.page-manage-profile input[name=manage-profile-about]').val('');
+					$('.page-manage-profile input[name=manage-profile-avatar]').val('');
+					$('.page-manage-profile select[name=manage-profile-gender]').val('').change();
 
+					$('.page-manage-profile input[name=manage-profile-location]').val('');
+					$('.page-manage-profile input[name=manage-profile-interests]').val('');
+					$('.page-manage-profile input[name=manage-profile-site]').val('');
+					$('.page-manage-profile input[name=manage-profile-mail]').val('');
+
+					$('.page-manage-profile input[name=manage-profile-facebook]').val('');
+					$('.page-manage-profile input[name=manage-profile-instagram]').val('');
+					$('.page-manage-profile input[name=manage-profile-twitter]').val('');
+					$('.page-manage-profile input[name=manage-profile-vk]').val('');
+
+					$('.page-manage-profile input[name=manage-profile-telegram]').val('');
+					$('.page-manage-profile input[name=manage-profile-skype]').val('');
+					$('.page-manage-profile input[name=manage-profile-viber]').val('');
+					$('.page-manage-profile input[name=manage-profile-whatsapp]').val('');
+
+					$('.page-manage-profile .submit-button-ring').css('display','none');
+					$('.page-manage-profile .manage-profile-error').html('');
+					$('.page-manage-profile .manage-profile-success').html('');
+					$('.page-manage-profile .icon-check').css('display','none');
+
+					viz.api.getAccounts([current_user],function(err,response){
+						if(err){
+							$('.page-manage-profile .manage-profile-error').html('<p class="red">'+ltmp_arr.default_node_not_respond+'</p>');
+						}
+						else{
+							if(current_user==response[0].name){
+								let json_metadata={};
+								if(''!=response[0].json_metadata){
+									json_metadata=JSON.parse(response[0].json_metadata);
+								}
+								console.log(json_metadata);
+								if(typeof json_metadata.profile !== 'undefined'){
+									if(typeof json_metadata.profile.nickname !== 'undefined'){
+										$('.page-manage-profile input[name=manage-profile-nickname]').val(json_metadata.profile.nickname);
+									}
+									if(typeof json_metadata.profile.about !== 'undefined'){
+										$('.page-manage-profile input[name=manage-profile-about]').val(json_metadata.profile.about);
+									}
+									if(typeof json_metadata.profile.avatar !== 'undefined'){
+										$('.page-manage-profile input[name=manage-profile-avatar]').val(json_metadata.profile.avatar);
+									}
+									if(typeof json_metadata.profile.gender !== 'undefined'){
+										$('.page-manage-profile select[name=manage-profile-gender]').val(json_metadata.profile.gender);
+									}
+
+									if(typeof json_metadata.profile.location !== 'undefined'){
+										$('.page-manage-profile input[name=manage-profile-location]').val(json_metadata.profile.location);
+									}
+									if(typeof json_metadata.profile.interests !== 'undefined'){
+										$('.page-manage-profile input[name=manage-profile-interests]').val(json_metadata.profile.interests.join(', '));
+									}
+									if(typeof json_metadata.profile.site !== 'undefined'){
+										$('.page-manage-profile input[name=manage-profile-site]').val(json_metadata.profile.site);
+									}
+									if(typeof json_metadata.profile.mail !== 'undefined'){
+										$('.page-manage-profile input[name=manage-profile-mail]').val(json_metadata.profile.mail);
+									}
+
+									if(typeof json_metadata.profile.services !== 'undefined'){
+										if(typeof json_metadata.profile.services.facebook !== 'undefined'){
+											$('.page-manage-profile input[name=manage-profile-facebook]').val(json_metadata.profile.services.facebook);
+										}
+										if(typeof json_metadata.profile.services.instagram !== 'undefined'){
+											$('.page-manage-profile input[name=manage-profile-instagram]').val(json_metadata.profile.services.instagram);
+										}
+										if(typeof json_metadata.profile.services.twitter !== 'undefined'){
+											$('.page-manage-profile input[name=manage-profile-twitter]').val(json_metadata.profile.services.twitter);
+										}
+										if(typeof json_metadata.profile.services.vk !== 'undefined'){
+											$('.page-manage-profile input[name=manage-profile-vk]').val(json_metadata.profile.services.vk);
+										}
+										if(typeof json_metadata.profile.services.telegram !== 'undefined'){
+											$('.page-manage-profile input[name=manage-profile-telegram]').val(json_metadata.profile.services.telegram);
+										}
+										if(typeof json_metadata.profile.services.skype !== 'undefined'){
+											$('.page-manage-profile input[name=manage-profile-skype]').val(json_metadata.profile.services.skype);
+										}
+										if(typeof json_metadata.profile.services.viber !== 'undefined'){
+											$('.page-manage-profile input[name=manage-profile-viber]').val(json_metadata.profile.services.viber);
+										}
+										if(typeof json_metadata.profile.services.whatsapp !== 'undefined'){
+											$('.page-manage-profile input[name=manage-profile-whatsapp]').val(json_metadata.profile.services.whatsapp);
+										}
+									}
+								}
+							}
+						}
+					});
+				}
 				if('manage-access'==path[2]){
 					$('.page-manage-access input[name=manage-access-login]').val(current_user);
 					$('.page-manage-access input[name=manage-access-login]').unbind('keypress');
@@ -2323,6 +2560,11 @@ function load_history(el,back,clear){
 								data=ltmp(ltmp_arr.history_claim_invite_balance,{key:op.invite_secret});
 							}
 						}
+						if('use_invite_balance'==op_name){
+							if(current_user==op.receiver){
+								data=ltmp(ltmp_arr.history_use_invite_balance,{key:op.invite_secret});
+							}
+						}
 						if('transfer'==op_name){
 							if(current_user==op.from){
 								data=ltmp(ltmp_arr.history_transfer_from,{tokens:show_price_in_tokens(op.amount,true),to:op.to});
@@ -2432,6 +2674,12 @@ function view_assets(path,params,title){
 			if(0<$('.view-'+path[1]+' .page-'+path[2]).length){
 				$('.view-'+path[1]+' .page-'+path[2]).css('display','block');
 				if('unstake-shares'==path[2]){
+					viz.api.getChainProperties(function(err,response){
+						if(!err){
+							$('.median-props[rel="withdraw_intervals"]').html(response.withdraw_intervals);
+						}
+					});
+
 					$('.page-unstake-shares .submit-button-ring[rel=unstake]').css('display','none');
 					$('.page-unstake-shares .unstake-shares-error').html('');
 					$('.page-unstake-shares .unstake-shares-success').html('');
@@ -2504,21 +2752,24 @@ function view_assets(path,params,title){
 					},100);
 					load_history($('.page-award .history'),false,true);
 				}
-				if('invites'==path[2]){
-					$('.page-invites .icon-check[rel=create]').css('display','none');
-					$('.page-invites .submit-button-ring[rel=create]').css('display','none');
-					$('.page-invites .invites-create-error').html('');
-					$('.page-invites .invites-create-success').html('');
-					$('.page-invites input[name=invites-create-amount]').val('');
+				if('checks'==path[2]){
+					$('.page-checks .icon-check[rel=create]').css('display','none');
+					$('.page-checks .submit-button-ring[rel=create]').css('display','none');
+					$('.page-checks .invites-create-error').html('');
+					$('.page-checks .invites-create-success').html('');
+					$('.page-checks input[name=invites-create-amount]').val('');
 
-					$('.page-invites .icon-check[rel=claim]').css('display','none');
-					$('.page-invites .submit-button-ring[rel=claim]').css('display','none');
-					$('.page-invites .invites-claim-error').html('');
-					$('.page-invites .invites-claim-success').html('');
-					$('.page-invites input[name=invites-claim-code]').val('');
-					$('.page-invites .invites-claim-code-caption').css('display','none');
+					$('.page-checks .icon-check[rel=claim]').css('display','none');
+					$('.page-checks .submit-button-ring[rel=claim]').css('display','none');
+					$('.page-checks .invites-claim-error').html('');
+					$('.page-checks .invites-claim-success').html('');
+					$('.page-checks input[name=invites-claim-code]').val('');
+					$('.page-checks .invites-claim-code-caption').css('display','none');
 
-					load_history($('.page-invites .history'),false,true);
+					clearTimeout(update_chain_properties_timer);
+					update_chain_properties_timer=setTimeout("update_chain_properties()",100);
+
+					load_history($('.page-checks .history'),false,true);
 				}
 				if('transfer'==path[2]){
 					$('.page-transfer .submit-button-ring').css('display','none');
@@ -2543,12 +2794,28 @@ function view_assets(path,params,title){
 					$('.page-deposit input[name=deposit-account]').val(current_user);
 				}
 				if('stake-shares'==path[2]){
-					$('.page-stake-shares .submit-button-ring[rel=unstake]').css('display','none');
-					$('.page-stake-shares .icon-check[rel=unstake]').css('display','none');
-					$('.page-stake-shares .unstake-shares-error').html('');
-					$('.page-stake-shares .unstake-shares-success').html('');
-					$('.page-stake-shares input[name=stake-shares-tokens-amount]').val('');
+					viz.api.getChainProperties(function(err,response){
+						if(!err){
+							$('.median-props[rel="withdraw_intervals"]').html(response.withdraw_intervals);
+						}
+					});
 
+					$('.page-stake-shares .submit-button-ring[rel=stake]').css('display','none');
+					$('.page-stake-shares .icon-check[rel=stake]').css('display','none');
+					$('.page-stake-shares .stake-shares-error').html('');
+					$('.page-stake-shares .stake-shares-success').html('');
+					$('.page-stake-shares input[name=stake-shares-tokens-amount]').val('');
+					if(standalone){
+						$('.activate-viz-dollars').css('display','none');
+					}
+					else{
+						$('.activate-viz-dollars').css('display','block');
+						$('.page-stake-shares .submit-button-ring[rel=activate-viz-dollars]').css('display','none');
+						$('.page-stake-shares .icon-check[rel=activate-viz-dollars]').css('display','none');
+						$('.page-stake-shares .activate-viz-dollars-error').html('');
+						$('.page-stake-shares .activate-viz-dollars-success').html('');
+						$('.page-stake-shares input[name=activate-viz-dollars-code]').val('');
+					}
 					load_history($('.page-stake-shares .history'),false,true);
 				}
 				if('delegate-shares'==path[2]){
@@ -2671,42 +2938,50 @@ function update_witnesses_list(){
 						let data='';
 						let inactive_data='';
 						for(i in response){
+							let item_arr=response[i];
 							let item='';
 							let active=true;
-							if('VIZ1111111111111111111111111111111114T1Anm'==response[i].signing_key){
+							if('VIZ1111111111111111111111111111111114T1Anm'==item_arr.signing_key){
 								active=false;
 							}
-							let witness_account=response[i].owner;
+							let witness_account=item_arr.owner;
 							item+='<div class="witness-item captions'+(active?'':' inactive')+'">';
 							item+='<label class="check color-orange">'+witness_account+'<input type="checkbox" value="'+witness_account+'"'+(-1!=user_votes.indexOf(witness_account)?' checked="checked" title="'+ltmp(ltmp_arr.witness_unvote_caption,{witness:witness_account})+'"':' title="'+ltmp(ltmp_arr.witness_vote_caption,{witness:witness_account})+'"')+'><span class="mark"></span></label>';
 							item+=' <span class="witness-props-action inline-button grey small">'+ltmp_arr.witness_props_caption+'</span>';
-							if(-1==response[i].url.indexOf('https://')){
-								if(-1==response[i].url.indexOf('http://')){
-									response[i].url='https://'+response[i].url;
+							if(-1==item_arr.url.indexOf('https://')){
+								if(-1==item_arr.url.indexOf('http://')){
+									item_arr.url='https://'+item_arr.url;
 								}
 								else{
-									response[i].url='http://'+response[i].url;
+									item_arr.url='http://'+item_arr.url;
 								}
 							}
-							item+=' <a href="'+response[i].url+'" target="_blank" class="inline-button color-orange small">'+ltmp_arr.witness_url_caption+'</a>';
+							item+=' <a href="'+item_arr.url+'" target="_blank" class="inline-button color-orange small">'+ltmp_arr.witness_url_caption+'</a>';
 
-							item+=' <span class="inline-button grey small" title="'+ltmp_arr.witness_votes_weight_caption+'">'+number_thousands(Math.round(parseInt(response[i].votes/1000000)/100)/10)+'k</span>';
+							item+=' <span class="inline-button grey small" title="'+ltmp_arr.witness_votes_weight_caption+'">'+number_thousands(Math.round(parseInt(item_arr.votes/1000000)/100)/10)+'k</span>';
 							if(-1!=user_votes.indexOf(witness_account)){
 								item+=' <span class="inline-button color-green small vote-shares-value" title="'+ltmp_arr.witness_user_vote_weight_caption+'">+'+number_thousands(Math.round(parseInt(user_shares / user_votes.length)/100)/10)+'k</span>';
 							}
 							item+='<div class="witness-props">';
-							let new_hardfork=(parseInt(fast_str_replace('.','',response[i].running_version)) < parseInt(fast_str_replace('.','',response[i].hardfork_version_vote)));
-							item+=' <p>'+ltmp_arr.witness_node_version_caption+response[i].running_version+'</p>';
+							let new_hardfork=(parseInt(fast_str_replace('.','',item_arr.running_version)) < parseInt(fast_str_replace('.','',item_arr.hardfork_version_vote)));
+							item+=' <p>'+ltmp_arr.witness_node_version_caption+item_arr.running_version+'</p>';
 							if(new_hardfork){
-								item+=' <p>'+ltmp_arr.witness_hardfork_vote_caption+response[i].hardfork_version_vote+ltmp(ltmp.witness_hardfork_vote_starting_caption,{date:show_date(response[i].hardfork_time_vote,true)})+ltmp_arr.default_date_utc+'</p>';
+								item+=' <p>'+ltmp_arr.witness_hardfork_vote_caption+item_arr.hardfork_version_vote+ltmp(ltmp.witness_hardfork_vote_starting_caption,{date:show_date(item_arr.hardfork_time_vote,true)})+ltmp_arr.default_date_utc+'</p>';
 							}
-							item+='<p>'+ltmp_arr.witness_penalty_caption+'<strong>'+(parseInt(response[i].penalty_percent)/100)+'%</strong></p>';
-							delete(response[i].props['flag_energy_additional_cost']);
-							delete(response[i].props['min_curation_percent']);
-							delete(response[i].props['max_curation_percent']);
-							for(j in response[i].props){
-								item+='<p>'+witness_props_captions[j]+': <strong>'+(-1!==witness_props_percent.indexOf(j)?(parseInt(response[i].props[j])/100)+'%':response[i].props[j])+'</strong></p>';
+							item+='<p>'+ltmp_arr.witness_penalty_caption+'<strong>'+(parseInt(item_arr.penalty_percent)/100)+'%</strong></p>';
+							let props_item=item_arr.props;
+							for(j in ltmp_arr.witness_props_order){
+								item+='<p>'+witness_props_captions[j]+': <strong data-prop="'+j+'" data-value="'+props_item[j]+'">'+(-1!==witness_props_percent.indexOf(j)?(parseFloat(props_item[j])/100)+'%':props_item[j])+'</strong></p>';
 							}
+							/*
+							//old order by props object sort
+							delete(props_item['flag_energy_additional_cost']);
+							delete(props_item['min_curation_percent']);
+							delete(props_item['max_curation_percent']);
+							for(j in props_item){
+								item+='<p>'+witness_props_captions[j]+': <strong data-prop="'+j+'" data-value="'+props_item[j]+'">'+(-1!==witness_props_percent.indexOf(j)?(parseFloat(props_item[j])/100)+'%':props_item[j])+'</strong></p>';
+							}
+							*/
 							item+='</div>';
 							item+='</div>';
 							if(active){
@@ -2755,7 +3030,9 @@ function update_witness_props(props){
 	}
 	else{
 		let data='';
-		for(j in props){
+		for(j_num in ltmp_arr.witness_props_order){
+			let j=ltmp_arr.witness_props_order[j_num];
+		//for(j in props){//old order by props object sort
 			if(typeof witness_props_captions[j] == 'undefined'){
 				data+='<input type="hidden" name="witness-set-props-'+j+'" value="'+escape_html(''+props[j])+'">';
 			}
@@ -2779,105 +3056,21 @@ function update_witness_props(props){
 function update_fund_request(id,votes,votes_update){
 	votes=typeof votes==='undefined'?false:votes;
 	votes_update=typeof votes_update==='undefined'?false:votes_update;
-	viz.api.getCommitteeRequest(id,(!votes?0:-1),function(err,response){
-		if(0<$('.fund-request[data-id='+response.request_id+']').length){
-			$('.fund-request[data-id='+response.request_id+']').removeClass('hidden');
-			if(!err){
-				let data='';
-				data+='<a data-href="/dao/fund-requests/'+response.request_id+'/">#'+response.request_id+' от '+response.creator+'</a>';
-				let descr='';
-				let url='';
-				if(-1!=response.url.indexOf('https://')){
-					descr=response.url.substring(0,response.url.indexOf('https://'));
-					url=response.url.substring(response.url.indexOf('https://'));
-				}
-				else{
-					if(-1!=response.url.indexOf('http://')){
-						descr=response.url.substring(0,response.url.indexOf('http://'));
-						url=response.url.substring(response.url.indexOf('http://'));
-					}
-					else{
-						descr=response.url;
-					}
-				}
-				if(''!=descr){
-					descr=escape_html(descr);
-					data+=' <span class="adaptive-show-block"></span><span class="view-memo">'+descr+'</span>';
-				}
-				data+='<span class="adaptive-show-block"></span><span class="inline-button date grey small">'+((0==response.status)?'до '+show_date(response.end_time,true):show_date(response.conclusion_time,true))+ltmp_arr.default_date_utc+'</span>\n';
-				if(0==response.status){
-					data+='<span class="inline-button grey small">'+number_thousands(show_balance_in_tokens(response.required_amount_min))+'&ndash;'+number_thousands(show_balance_in_tokens(response.required_amount_max,true))+'</span>';
-				}
-				if(3==response.status){
-					data+='<span class="inline-button red small">'+number_thousands(show_balance_in_tokens(response.conclusion_payout_amount,true))+'</span>';
-				}
-				if(4==response.status){
-					data+='<span class="inline-button color-orange small">'+number_thousands(show_balance_in_tokens(response.payout_amount,true))+' из '+number_thousands(show_balance_in_tokens(response.conclusion_payout_amount,true))+'</span>';
-				}
-				if(5==response.status){
-					data+='<span class="inline-button color-green small">'+number_thousands(show_balance_in_tokens(response.payout_amount,true))+'</span>';
-				}
-				$('.fund-request[data-id='+response.request_id+']').html(data);
-			}
-			else{
-				$('.fund-request[data-id='+response.request_id+']').html('<p><a data-href="/dao/fund-requests/'+response.request_id+'/">#'+response.request_id+' <span class="red">'+ltmp_arr.default_node_error+'</span></a></p>');
-			}
-		}
-		if(0<$('.section-fund-request[data-id='+response.request_id+']').length){
-			if(votes_update){
-				let data='';
-				data+='<h3>'+ltmp_arr.fund_request_votes_caption+'</h3>';
-				if(0==response.votes.length){
-					data+='<p>'+ltmp_arr.default_no_items+'</p>';
-				}
-				else{
-					let voters_arr=[];
-					let voters_percent_arr=[];
-					for(i in response.votes){
-						let vote=response.votes[i];
-						data+='<div class="fund-request-vote captions">';
-						data+='<span class="view-date">'+show_date(vote.last_update,true)+ltmp_arr.default_date_utc+'</span>';
-						voters_arr.push(vote.voter);
-						voters_percent_arr[vote.voter]=parseInt(vote.vote_percent);
-						let vote_percent=(parseInt(vote.vote_percent)/100);
-						vote_percent=fast_str_replace('-','&minus;',''+vote_percent)+'%';
-						data+=' <span class="view-percent">'+vote_percent+'</span> от <span class="view-account'+(current_user==vote.voter?' bold':'')+'">'+vote.voter+'</span>';
-						data+='</div>';
-					}
-					data+='<p class="fund-request-votes-summary">'+ltmp_arr.fund_request_votes_count+'<span class="fund-request-votes-count">'+response.votes.length+'</span></p>';
 
-					if((0==response.status)/*||(3==response.status)||(2==response.status)*/){
-						viz.api.getAccounts(voters_arr,function(err,response){
-							if(!err){
-								let summary='';
-								summary+=ltmp_arr.fund_request_votes_count+'<span class="fund-request-votes-count">'+response.length+'</span>';
-								let summary_effective_shares=0;
-								let rshares=0;
-								for(j in response){
-									let voter=response[j];
-									let effective_shares=parseFloat(voter.vesting_shares)-parseFloat(voter.delegated_vesting_shares)+parseFloat(voter.received_vesting_shares);
-									summary_effective_shares+=effective_shares;
-									rshares+=effective_shares*voters_percent_arr[voter.name]/10000;
-								}
-								summary+='<br>'+ltmp_arr.fund_request_votes_shares_amount+'~'+(summary_effective_shares/parseFloat(dgp.total_vesting_shares)*100).toFixed(2)+'% ('+ltmp_arr.fund_request_votes_shares_required+' >=<span class="chain-properties" rel="committee_request_approve_min_percent">&hellip;</span>%)';
-								summary+='<br>'+ltmp_arr.fund_request_calculated_amount+'~'+number_thousands(show_balance_in_tokens(parseFloat(required_amount_max)*rshares/summary_effective_shares,true))+'';
-								$('.fund-request-votes-summary').html(summary);
-								clearTimeout(update_chain_properties_timer);
-								update_chain_properties_timer=setTimeout("update_chain_properties()",100);
-							}
-							else{
-								console.log(err);
-							}
-						});
-					}
-				}
-				$('.section-fund-request[data-id='+response.request_id+'] .fund-request-votes').html(data);
-			}
-			else{
-				let data='';
-				data+='<h3>'+ltmp(ltmp_arr.fund_request_title_caption,{id})+'</h3>';
+	let in_range=false;
+	for(let range_i in dao_request_ranges){
+		if((id - dao_request_ranges[range_i][0])*(id - dao_request_ranges[range_i][1])<=0){
+			in_range=true;
+		}
+	}
+	if(in_range){
+		viz.api.getCommitteeRequest(id,(!votes?0:-1),function(err,response){
+			if(0<$('.fund-request[data-id='+response.request_id+']').length){
+				$('.fund-request[data-id='+response.request_id+']').removeClass('hidden');
 				if(!err){
-					data+='<p>'+ltmp_arr.fund_request_start_time_caption+'<span class="request-start-date">'+show_date(response.start_time,true)+ltmp_arr.default_date_utc+'</span></p>';
+					let data='';
+					if(response.request_id)
+					data+='<a data-href="/dao/fund-requests/'+response.request_id+'/">#'+response.request_id+' от '+response.creator+'</a>';
 					let descr='';
 					let url='';
 					if(-1!=response.url.indexOf('https://')){
@@ -2894,132 +3087,230 @@ function update_fund_request(id,votes,votes_update){
 						}
 					}
 					if(''!=descr){
-						data+='<p>'+ltmp_arr.fund_request_descr_caption+'<span class="request-descr">'+escape_html(descr)+'</span></p>';
+						descr=escape_html(descr);
+						data+=' <span class="adaptive-show-block"></span><span class="view-memo">'+descr+'</span>';
 					}
-					if(''!=url){
-						data+='<p>'+ltmp_arr.fund_request_url_caption+'<span class="request-url"><a href="'+escape_html(url)+'" target="_blank">'+escape_html(url)+'</a></span></p>';
-					}
-					data+='<p>'+ltmp_arr.fund_request_creator_caption+'<span class="request-creator">'+response.creator+'</span></p>';
-					if(response.worker!=response.creator){
-						data+='<p>'+ltmp_arr.fund_request_worker_caption+'<span class="request-worker">'+response.worker+'</span></p>';
-					}
-					data+='<p>'+ltmp_arr.fund_request_min_amount_caption+'<span class="request-required-amount-min">'+number_thousands(show_balance_in_tokens(response.required_amount_min,true))+'</span></p>';
-					let required_amount_max=response.required_amount_max;
-					data+='<p>'+ltmp_arr.fund_request_max_amount_caption+'<span class="request-required-amount-max">'+number_thousands(show_balance_in_tokens(response.required_amount_max,true))+'</span></p>';
-					if(response.status>0){
-						data+='<p>'+ltmp_arr.fund_request_conclusion_time_caption+'<span class="request-conclusion-date">'+show_date(response.conclusion_time,true)+ltmp_arr.default_date_utc+'</span></p>';
-					}
-					if(response.status>2){
-						data+='<p>'+ltmp_arr.fund_request_conclusion_payout_amount_caption+'<span class="request-conclusion-payout-amount">'+number_thousands(show_balance_in_tokens(response.conclusion_payout_amount,true))+'</span></p>';
-					}
-					data+='<p>'+ltmp_arr.fund_request_status_caption+'<span class="request-status bold" rel="'+response.status+'">'+request_status_arr[response.status]+'</span></p>';
+					data+='<span class="adaptive-show-block"></span><span class="inline-button date grey small">'+((0==response.status)?'до '+show_date(response.end_time,true):show_date(response.conclusion_time,true))+ltmp_arr.default_date_utc+'</span>\n';
 					if(0==response.status){
-						data+='<p>'+ltmp_arr.fund_request_end_time_caption+'<span class="request-end-date">'+show_date(response.end_time,true)+ltmp_arr.default_date_utc+'</span></p>';
+						data+='<span class="inline-button grey small">'+number_thousands(show_balance_in_tokens(response.required_amount_min))+'&ndash;'+number_thousands(show_balance_in_tokens(response.required_amount_max,true))+'</span>';
 					}
-					if(response.status>3){
-						data+='<p>'+ltmp_arr.fund_request_payout_amount_caption+'<span class="request-payout-amount">'+number_thousands(show_balance_in_tokens(response.payout_amount,true))+'</span></p>';
+					if(3==response.status){
+						data+='<span class="inline-button red small">'+number_thousands(show_balance_in_tokens(response.conclusion_payout_amount,true))+'</span>';
 					}
 					if(4==response.status){
-						data+='<p>'+ltmp_arr.fund_request_remain_payout_amount_caption+'<span class="request-remain-payout-amount">'+number_thousands(show_balance_in_tokens(response.remain_payout_amount,true))+'</span></p>';
-						data+='<p>'+ltmp_arr.fund_request_last_payout_time_caption+'<span class="request-last-payout-time">'+show_date(response.last_payout_time,true)+ltmp_arr.default_date_utc+'</span></p>';
+						data+='<span class="inline-button color-orange small">'+number_thousands(show_balance_in_tokens(response.payout_amount,true))+' из '+number_thousands(show_balance_in_tokens(response.conclusion_payout_amount,true))+'</span>';
 					}
-					let current_user_percent=0;
-					if(votes){
-						for(i in response.votes){
-							if(current_user==response.votes[i].voter){
-								current_user_percent=response.votes[i].vote_percent;
-							}
-						}
+					if(5==response.status){
+						data+='<span class="inline-button color-green small">'+number_thousands(show_balance_in_tokens(response.payout_amount,true))+'</span>';
 					}
-					if(0==response.status){
-						data+=`
-							<p>
-								<label class="input-descr">
-									<span class="input-caption">`+ltmp_arr.fund_request_vote_weight_caption+`</span>
-									<input type="text" name="fund-vote-request-percent" class="simple-rounded" placeholder="0%" data-result-element="input[name=fund-vote-request-percent-range]" value="`+(0!=current_user_percent?parseFloat(current_user_percent/100).toFixed(2)+'%':'')+`">
-									<span class="range-slider">
-										<input class="range-slider-input range-slider-color-green simple-rounded-size" name="fund-vote-request-percent-range" data-result-element="input[name=fund-vote-request-percent]" type="range" value="`+(current_user_percent)+`" min="-10000" max="10000" step="1">
-									</span>
-								</label>
-							</p>
-							<p class="red fund-vote-request-error"></p>
-							<p class="green fund-vote-request-success"></p>
-							<p>
-								<input class="fund-vote-request-action orange-button captions" type="button" value="`+ltmp_arr.fund_request_vote_button+`">
-								<span class="submit-button-ring"></span>
-								<span class="icon icon-margin hidden icon-color-orange icon-check"></span>
-							</p>`;
-					}
-					if(votes){
-						data+='<div class="fund-request-votes">';
-						data+='<h3>'+ltmp_arr.fund_request_votes_caption+'</h3>';
-						if(0==response.votes.length){
-							data+='<p>'+ltmp_arr.default_no_items+'</p>';
-						}
-						else{
-							let voters_arr=[];
-							let voters_percent_arr=[];
-							for(i in response.votes){
-								let vote=response.votes[i];
-								data+='<div class="fund-request-vote captions">';
-								data+='<span class="view-date">'+show_date(vote.last_update,true)+ltmp_arr.default_date_utc+'</span>';
-								voters_arr.push(vote.voter);
-								voters_percent_arr[vote.voter]=parseInt(vote.vote_percent);
-								let vote_percent=(parseInt(vote.vote_percent)/100);
-								vote_percent=fast_str_replace('-','&minus;',''+vote_percent)+'%';
-								data+=' <span class="view-percent">'+vote_percent+'</span> от <span class="view-account'+(current_user==vote.voter?' bold':'')+'">'+vote.voter+'</span>';
-								data+='</div>';
-							}
-							data+='<p class="fund-request-votes-summary">'+ltmp_arr.fund_request_votes_count+'<span class="fund-request-votes-count">'+response.votes.length+'</span></p>';
-							if((0==response.status)/*||(3==response.status)||(2==response.status)*/){
-								viz.api.getAccounts(voters_arr,function(err,response){
-									if(!err){
-										let summary='';
-										summary+=ltmp_arr.fund_request_votes_count+'<span class="fund-request-votes-count">'+response.length+'</span>';
-										let summary_effective_shares=0;
-										let rshares=0;
-										for(j in response){
-											let voter=response[j];
-											let effective_shares=parseFloat(voter.vesting_shares)-parseFloat(voter.delegated_vesting_shares)+parseFloat(voter.received_vesting_shares);
-											summary_effective_shares+=effective_shares;
-											rshares+=effective_shares*voters_percent_arr[voter.name]/10000;
-										}
-										summary+='<br>'+ltmp_arr.fund_request_votes_shares_amount+'~'+(summary_effective_shares/parseFloat(dgp.total_vesting_shares)*100).toFixed(2)+'% ('+ltmp_arr.fund_request_votes_shares_required+' >=<span class="chain-properties" rel="committee_request_approve_min_percent">&hellip;</span>%)';
-										summary+='<br>'+ltmp_arr.fund_request_calculated_amount+'~'+number_thousands(show_balance_in_tokens(parseFloat(required_amount_max)*rshares/summary_effective_shares,true))+'';
-										$('.fund-request-votes-summary').html(summary);
-										clearTimeout(update_chain_properties_timer);
-										update_chain_properties_timer=setTimeout("update_chain_properties()",100);
-									}
-									else{
-										console.log(err);
-									}
-								});
-							}
-						}
-						data+='</div>';
-					}
+					$('.fund-request[data-id='+response.request_id+']').html(data);
 				}
 				else{
-					data+='<p class="red">'+ltmp_arr.default_node_error+'</p>';
-				}
-				data+='<hr><a data-href="/dao/fund-requests/">'+ltmp_arr.default_return_link+'</a>';
-				$('.section-fund-request[data-id='+response.request_id+']').html(data);
-				//binds
-				if(0<$('input[name=fund-vote-request-percent]').length){
-					$('input[name=fund-vote-request-percent]').unbind('keyup');
-					$('input[name=fund-vote-request-percent]').bind('keyup',function(){
-						$($(this).attr('data-result-element')).val(parseInt(this.value*100));
-					});
-				}
-				if(0<$('input[name=fund-vote-request-percent-range]').length){
-					$('input[name=fund-vote-request-percent-range]').unbind('input');
-					$('input[name=fund-vote-request-percent-range]').bind('input',function(){
-						$($(this).attr('data-result-element')).val(parseFloat(this.value/100).toFixed(2)+'%');
-					});
+					$('.fund-request[data-id='+response.request_id+']').html('<p><a data-href="/dao/fund-requests/'+response.request_id+'/">#'+response.request_id+' <span class="red">'+ltmp_arr.default_node_error+'</span></a></p>');
 				}
 			}
-		}
-	});
+			if(0<$('.section-fund-request[data-id='+response.request_id+']').length){
+				if(votes_update){
+					let data='';
+					data+='<h3>'+ltmp_arr.fund_request_votes_caption+'</h3>';
+					if(0==response.votes.length){
+						data+='<p>'+ltmp_arr.default_no_items+'</p>';
+					}
+					else{
+						let voters_arr=[];
+						let voters_percent_arr=[];
+						for(i in response.votes){
+							let vote=response.votes[i];
+							data+='<div class="fund-request-vote captions" data-voter="'+vote.voter+'">';
+							data+='<span class="view-date">'+show_date(vote.last_update,true)+ltmp_arr.default_date_utc+'</span>';
+							voters_arr.push(vote.voter);
+							voters_percent_arr[vote.voter]=parseInt(vote.vote_percent);
+							let vote_percent=(parseInt(vote.vote_percent)/100);
+							vote_percent=fast_str_replace('-','&minus;',''+vote_percent)+'%';
+							data+=' <span class="view-percent">'+vote_percent+'</span>'+ltmp_arr.fund_request_vote_list_from+'<span class="view-account'+(current_user==vote.voter?' bold':'')+'">'+vote.voter+'</span>';
+							data+='<span class="shares"></span>';
+							data+='</div>';
+						}
+						data+='<p class="fund-request-votes-summary">'+ltmp_arr.fund_request_votes_count+'<span class="fund-request-votes-count">'+response.votes.length+'</span></p>';
+
+						if((0==response.status)/*||(3==response.status)||(2==response.status)*/){
+							viz.api.getAccounts(voters_arr,function(err,response){
+								if(!err){
+									let summary='';
+									summary+=ltmp_arr.fund_request_votes_count+'<span class="fund-request-votes-count">'+response.length+'</span>';
+									let summary_effective_shares=0;
+									let rshares=0;
+									for(j in response){
+										let voter=response[j];
+										let effective_shares=parseFloat(voter.vesting_shares)-parseFloat(voter.delegated_vesting_shares)+parseFloat(voter.received_vesting_shares);
+										$('.fund-request-vote[data-voter="'+voter.name+'"] .shares').html(ltmp_arr.fund_request_vote_list_shares_amount+'<span class="view-tokens">'+show_balance_in_tokens(effective_shares,true)+'</span>');
+										summary_effective_shares+=effective_shares;
+										rshares+=effective_shares*voters_percent_arr[voter.name]/10000;
+									}
+									summary+='<br>'+ltmp_arr.fund_request_votes_shares_amount+'~'+(summary_effective_shares/parseFloat(dgp.total_vesting_shares)*100).toFixed(2)+'% ('+ltmp_arr.fund_request_votes_shares_required+' >=<span class="chain-properties" rel="committee_request_approve_min_percent">&hellip;</span>%)';
+									summary+='<br>'+ltmp_arr.fund_request_calculated_amount+'~'+number_thousands(show_balance_in_tokens(parseFloat(required_amount_max)*rshares/summary_effective_shares,true))+'';
+									$('.fund-request-votes-summary').html(summary);
+									clearTimeout(update_chain_properties_timer);
+									update_chain_properties_timer=setTimeout("update_chain_properties()",100);
+								}
+								else{
+									console.log(err);
+								}
+							});
+						}
+					}
+					$('.section-fund-request[data-id='+response.request_id+'] .fund-request-votes').html(data);
+				}
+				else{
+					let data='';
+					data+='<h3>'+ltmp(ltmp_arr.fund_request_title_caption,{id})+'</h3>';
+					if(!err){
+						data+='<p>'+ltmp_arr.fund_request_start_time_caption+'<span class="request-start-date">'+show_date(response.start_time,true)+ltmp_arr.default_date_utc+'</span>'+(response.creator==current_user?' <span class="cancel-fund-request-action inline-button red captions">'+ltmp_arr.fund_request_cancel_caption+'</span>':'')+'</p>';
+						let descr='';
+						let url='';
+						if(-1!=response.url.indexOf('https://')){
+							descr=response.url.substring(0,response.url.indexOf('https://'));
+							url=response.url.substring(response.url.indexOf('https://'));
+						}
+						else{
+							if(-1!=response.url.indexOf('http://')){
+								descr=response.url.substring(0,response.url.indexOf('http://'));
+								url=response.url.substring(response.url.indexOf('http://'));
+							}
+							else{
+								descr=response.url;
+							}
+						}
+						if(''!=descr){
+							data+='<p>'+ltmp_arr.fund_request_descr_caption+'<span class="request-descr">'+escape_html(descr)+'</span></p>';
+						}
+						if(''!=url){
+							data+='<p>'+ltmp_arr.fund_request_url_caption+'<span class="request-url"><a href="'+escape_html(url)+'" target="_blank">'+escape_html(url)+'</a></span></p>';
+						}
+						data+='<p>'+ltmp_arr.fund_request_creator_caption+'<span class="request-creator">'+response.creator+'</span></p>';
+						if(response.worker!=response.creator){
+							data+='<p>'+ltmp_arr.fund_request_worker_caption+'<span class="request-worker">'+response.worker+'</span></p>';
+						}
+						data+='<p>'+ltmp_arr.fund_request_min_amount_caption+'<span class="request-required-amount-min">'+number_thousands(show_balance_in_tokens(response.required_amount_min,true))+'</span></p>';
+						let required_amount_max=response.required_amount_max;
+						data+='<p>'+ltmp_arr.fund_request_max_amount_caption+'<span class="request-required-amount-max">'+number_thousands(show_balance_in_tokens(response.required_amount_max,true))+'</span></p>';
+						if(response.status>0){
+							data+='<p>'+ltmp_arr.fund_request_conclusion_time_caption+'<span class="request-conclusion-date">'+show_date(response.conclusion_time,true)+ltmp_arr.default_date_utc+'</span></p>';
+						}
+						if(response.status>2){
+							data+='<p>'+ltmp_arr.fund_request_conclusion_payout_amount_caption+'<span class="request-conclusion-payout-amount">'+number_thousands(show_balance_in_tokens(response.conclusion_payout_amount,true))+'</span></p>';
+						}
+						data+='<p>'+ltmp_arr.fund_request_status_caption+'<span class="request-status bold" rel="'+response.status+'">'+request_status_arr[response.status]+'</span></p>';
+						if(0==response.status){
+							data+='<p>'+ltmp_arr.fund_request_end_time_caption+'<span class="request-end-date">'+show_date(response.end_time,true)+ltmp_arr.default_date_utc+'</span></p>';
+						}
+						if(response.status>3){
+							data+='<p>'+ltmp_arr.fund_request_payout_amount_caption+'<span class="request-payout-amount">'+number_thousands(show_balance_in_tokens(response.payout_amount,true))+'</span></p>';
+						}
+						if(4==response.status){
+							data+='<p>'+ltmp_arr.fund_request_remain_payout_amount_caption+'<span class="request-remain-payout-amount">'+number_thousands(show_balance_in_tokens(response.remain_payout_amount,true))+'</span></p>';
+							data+='<p>'+ltmp_arr.fund_request_last_payout_time_caption+'<span class="request-last-payout-time">'+show_date(response.last_payout_time,true)+ltmp_arr.default_date_utc+'</span></p>';
+						}
+						let current_user_percent=0;
+						if(votes){
+							for(i in response.votes){
+								if(current_user==response.votes[i].voter){
+									current_user_percent=response.votes[i].vote_percent;
+								}
+							}
+						}
+						if(0==response.status){
+							data+=`
+								<p>
+									<label class="input-descr">
+										<span class="input-caption">`+ltmp_arr.fund_request_vote_weight_caption+`</span>
+										<input type="text" name="fund-vote-request-percent" class="simple-rounded" placeholder="0%" data-result-element="input[name=fund-vote-request-percent-range]" value="`+(0!=current_user_percent?parseFloat(current_user_percent/100).toFixed(2)+'%':'')+`">
+										<span class="range-slider">
+											<input class="range-slider-input range-slider-color-green simple-rounded-size" name="fund-vote-request-percent-range" data-result-element="input[name=fund-vote-request-percent]" type="range" value="`+(current_user_percent)+`" min="-10000" max="10000" step="1">
+										</span>
+									</label>
+								</p>
+								<p class="red fund-vote-request-error"></p>
+								<p class="green fund-vote-request-success"></p>
+								<p>
+									<input class="fund-vote-request-action orange-button captions" type="button" value="`+ltmp_arr.fund_request_vote_button+`">
+									<span class="submit-button-ring"></span>
+									<span class="icon icon-margin hidden icon-color-orange icon-check"></span>
+								</p>`;
+						}
+						if(votes){
+							data+='<div class="fund-request-votes">';
+							data+='<h3>'+ltmp_arr.fund_request_votes_caption+'</h3>';
+							if(0==response.votes.length){
+								data+='<p>'+ltmp_arr.default_no_items+'</p>';
+							}
+							else{
+								let voters_arr=[];
+								let voters_percent_arr=[];
+								for(i in response.votes){
+									let vote=response.votes[i];
+									data+='<div class="fund-request-vote captions" data-voter="'+vote.voter+'">';
+									data+='<span class="view-date">'+show_date(vote.last_update,true)+ltmp_arr.default_date_utc+'</span>';
+									voters_arr.push(vote.voter);
+									voters_percent_arr[vote.voter]=parseInt(vote.vote_percent);
+									let vote_percent=(parseInt(vote.vote_percent)/100);
+									vote_percent=fast_str_replace('-','&minus;',''+vote_percent)+'%';
+									data+=' <span class="view-percent">'+vote_percent+'</span>'+ltmp_arr.fund_request_vote_list_from+'<span class="view-account'+(current_user==vote.voter?' bold':'')+'">'+vote.voter+'</span>';
+									data+='<span class="shares"></span>';
+									data+='</div>';
+								}
+								data+='<p class="fund-request-votes-summary">'+ltmp_arr.fund_request_votes_count+'<span class="fund-request-votes-count">'+response.votes.length+'</span></p>';
+								if((0==response.status)/*||(3==response.status)||(2==response.status)*/){
+									viz.api.getAccounts(voters_arr,function(err,response){
+										if(!err){
+											let summary='';
+											summary+=ltmp_arr.fund_request_votes_count+'<span class="fund-request-votes-count">'+response.length+'</span>';
+											let summary_effective_shares=0;
+											let rshares=0;
+											for(j in response){
+												let voter=response[j];
+												let effective_shares=parseFloat(voter.vesting_shares)-parseFloat(voter.delegated_vesting_shares)+parseFloat(voter.received_vesting_shares);
+												$('.fund-request-vote[data-voter="'+voter.name+'"] .shares').html(ltmp_arr.fund_request_vote_list_shares_amount+'<span class="view-tokens">'+show_balance_in_tokens(effective_shares,true)+'</span>');
+												summary_effective_shares+=effective_shares;
+												rshares+=effective_shares*voters_percent_arr[voter.name]/10000;
+											}
+											summary+='<br>'+ltmp_arr.fund_request_votes_shares_amount+'~'+(summary_effective_shares/parseFloat(dgp.total_vesting_shares)*100).toFixed(2)+'% ('+ltmp_arr.fund_request_votes_shares_required+' >=<span class="chain-properties" rel="committee_request_approve_min_percent">&hellip;</span>%)';
+											summary+='<br>'+ltmp_arr.fund_request_calculated_amount+'~'+number_thousands(show_balance_in_tokens(parseFloat(required_amount_max)*rshares/summary_effective_shares,true))+'';
+											$('.fund-request-votes-summary').html(summary);
+											clearTimeout(update_chain_properties_timer);
+											update_chain_properties_timer=setTimeout("update_chain_properties()",100);
+										}
+										else{
+											console.log(err);
+										}
+									});
+								}
+							}
+							data+='</div>';
+						}
+					}
+					else{
+						data+='<p class="red">'+ltmp_arr.default_node_error+'</p>';
+					}
+					data+='<hr><a data-href="/dao/fund-requests/">'+ltmp_arr.default_return_link+'</a>';
+					$('.section-fund-request[data-id='+response.request_id+']').html(data);
+					//binds
+					if(0<$('input[name=fund-vote-request-percent]').length){
+						$('input[name=fund-vote-request-percent]').unbind('keyup');
+						$('input[name=fund-vote-request-percent]').bind('keyup',function(){
+							$($(this).attr('data-result-element')).val(parseInt(this.value*100));
+						});
+					}
+					if(0<$('input[name=fund-vote-request-percent-range]').length){
+						$('input[name=fund-vote-request-percent-range]').unbind('input');
+						$('input[name=fund-vote-request-percent-range]').bind('input',function(){
+							$($(this).attr('data-result-element')).val(parseFloat(this.value/100).toFixed(2)+'%');
+						});
+					}
+				}
+			}
+		});
+	}
 }
 function update_fund_requests(status){
 	status=typeof status==='undefined'?false:status;
@@ -3041,20 +3332,34 @@ function update_fund_requests(status){
 				let per_status=10;
 				for(i in response){
 					let req_id=i;
-					counter++;
+					//check request id in range (remove spam from list)
+					let in_range=false;
+					for(let range_i in dao_request_ranges){
+						if((response[req_id] - dao_request_ranges[range_i][0])*(response[req_id] - dao_request_ranges[range_i][1])<=0){
+							in_range=true;
+						}
+					}
+					if(in_range){
+						counter++;
+					}
 					if(counter<=per_status){
-						$('.fund-requests[data-status='+status+']').append('<div class="fund-request captions" data-id="'+response[req_id]+'"><a data-href="/dao/fund-requests/'+response[req_id]+'/">#'+response[req_id]+'</a></div>');
-						update_fund_request(response[req_id]);
+						if(in_range){
+							$('.fund-requests[data-status='+status+']').append('<div class="fund-request captions" data-id="'+response[req_id]+'"><a data-href="/dao/fund-requests/'+response[req_id]+'/">#'+response[req_id]+'</a></div>');
+							update_fund_request(response[req_id]);
+						}
 					}
 					else{
-						$('.fund-requests[data-status='+status+']').append('<div class="fund-request hidden captions" data-id="'+response[req_id]+'">#'+response[req_id]+'</div>');
+						if(in_range){
+							$('.fund-requests[data-status='+status+']').append('<div class="fund-request hidden captions" data-id="'+response[req_id]+'">#'+response[req_id]+'</div>');
+						}
 					}
+
 				}
 				if(counter>=per_status){
 					$('.fund-requests[data-status='+status+']').append('<div class="load-more"><a class="inline-button color-orange no-margin fund-show-more-requests captions">Показать остальные заявки &rarr;</a></div>');
 				}
 				if(0==response.length){
-					$('.fund-requests[data-status='+status+']').append('<div class="no-results"><p class="captions">Заявок по данным критериям не найдено.</p></div>');
+					$('.fund-requests[data-status='+status+']').append('<div class="no-results"><p class="captions">Заявок по данным критериям за последние 7 дней не найдено.</p></div>');
 				}
 			}
 			else{
@@ -3082,6 +3387,13 @@ function view_dao(path,params,title){
 		if(typeof path[2] != 'undefined'){
 			if(0<$('.view-'+path[1]+' .page-'+path[2]).length){
 				$('.view-'+path[1]+' .page-'+path[2]).css('display','block');
+				if('fund-create-request'==path[2]){
+					viz.api.getChainProperties(function(err,response){
+						if(!err){
+							$('.median-props[rel="committee_create_request_fee"]').html(show_price_in_tokens(response.create_paid_subscription_fee,true));
+						}
+					});
+				}
 				if('fund-requests'==path[2]){
 					$('.view-'+path[1]+' .page-'+path[2]+' .section').css('display','none');
 					if(''!=path[3]){
@@ -3114,10 +3426,19 @@ function view_dao(path,params,title){
 					$('.page-witness-params .icon-check[rel=setup]').css('display','none');
 					$('.page-witness-params .submit-button-ring[rel=setup]').css('display','none');
 					$('.page-witness-params .witness-set-props').html('');
+
+					$('.page-witness-params .fee-checkbox').css('display','none');
+					viz.api.getChainProperties(function(err,response){
+						if(!err){
+							$('.median-props[rel="witness_declaration_fee"]').html(show_price_in_tokens(response.witness_declaration_fee,true));
+						}
+					});
+
 					viz.api.getWitnessByAccount(current_user,function(err,response){
 						if(!err){
 							if(null==response){
 								$('.page-witness-params .witness-setup-error').html('Аккаунт не объявлен делегатом');
+								$('.page-witness-params .fee-checkbox').css('display','block');
 							}
 							else{
 								if(typeof response.owner != 'undefined' && current_user==response.owner){
@@ -3127,8 +3448,8 @@ function view_dao(path,params,title){
 								else{
 									$('.page-witness-params .witness-setup-error').html('Аккаунт не объявлен делегатом');
 								}
+								update_witness_props(response.props);
 							}
-							update_witness_props(response.props);
 						}
 						else{
 							$('.page-witness-params .witness-setup-error').html(ltmp_arr.default_node_error);
@@ -3151,7 +3472,7 @@ function change_state(location,state,save_state){
 	$('body,html').animate({scrollTop:0},0);
 	var params=[];
 	var path=[];
-	var title='VIZ+';
+	var title='my VIZ+';
 
 	if(typeof state.path == 'undefined'){
 		if(-1!=location.indexOf('?')){
@@ -3233,6 +3554,7 @@ function change_state(location,state,save_state){
 function claim_invite(code,el){
 	let page=$(el).closest('.page');
 	page.find('.invites-claim-action').attr('disabled','disabled');
+	page.find('.invites-use-action').attr('disabled','disabled');
 	page.find('.icon-check[rel=claim]').css('display','none');
 	page.find('.submit-button-ring[rel=claim]').css('display','inline-block');
 
@@ -3244,13 +3566,14 @@ function claim_invite(code,el){
 				page.find('.invites-claim-success').html(ltmp(ltmp_arr.invites_claim_success,{account:current_user}));
 
 				page.find('.invites-claim-action').removeAttr('disabled');
+				page.find('.invites-use-action').removeAttr('disabled');
 				page.find('.submit-button-ring[rel=claim]').css('display','none');
 				page.find('.icon-check[rel=claim]').css('display','inline-block');
 
 				page.find('input[name=invites-claim-code]').val('');
 				page.find('.invites-claim-code-caption').css('display','none');
 				//update balances info
-				update_balances($('.page-invites .account-balance'));
+				update_balances($('.page-checks .account-balance'));
 
 				setTimeout(load_history,3000,page.find('.history'));
 			}
@@ -3258,6 +3581,7 @@ function claim_invite(code,el){
 				page.find('.invites-claim-error').html(ltmp_arr.default_operation_error);
 
 				page.find('.invites-claim-action').removeAttr('disabled');
+				page.find('.invites-use-action').removeAttr('disabled');
 				page.find('.submit-button-ring[rel=claim]').css('display','none');
 
 				console.log(err);
@@ -3272,7 +3596,76 @@ function claim_invite(code,el){
 			page.find('.invites-claim-error').html(ltmp_arr.invites_claim_code_incorrect);
 		}
 		page.find('.invites-claim-action').removeAttr('disabled');
+		page.find('.invites-use-action').removeAttr('disabled');
 		page.find('.submit-button-ring[rel=claim]').css('display','none');
+	}
+}
+function use_invite(code,el){
+	let page=$(el).closest('.page');
+	page.find('.invites-claim-action').attr('disabled','disabled');
+	page.find('.invites-use-action').attr('disabled','disabled');
+	page.find('.icon-check[rel=claim]').css('display','none');
+	page.find('.submit-button-ring[rel=claim]').css('display','inline-block');
+
+	page.find('.invites-claim-error').html('');
+	page.find('.invites-claim-success').html('');
+	if(viz.auth.isWif(code)){
+		viz.broadcast.useInviteBalance(users[current_user].active_key,current_user,current_user,code,function(err,result){
+			if(!err){
+				page.find('.invites-claim-success').html(ltmp(ltmp_arr.invites_claim_success,{account:current_user}));
+
+				page.find('.invites-claim-action').removeAttr('disabled');
+				page.find('.invites-use-action').removeAttr('disabled');
+				page.find('.submit-button-ring[rel=claim]').css('display','none');
+				page.find('.icon-check[rel=claim]').css('display','inline-block');
+
+				page.find('input[name=invites-claim-code]').val('');
+				page.find('.invites-claim-code-caption').css('display','none');
+				//update balances info
+				update_balances($('.page-checks .account-balance'));
+
+				setTimeout(load_history,3000,page.find('.history'));
+			}
+			else{
+				page.find('.invites-claim-error').html(ltmp_arr.default_operation_error);
+
+				page.find('.invites-claim-action').removeAttr('disabled');
+				page.find('.invites-use-action').removeAttr('disabled');
+				page.find('.submit-button-ring[rel=claim]').css('display','none');
+
+				console.log(err);
+			}
+		});
+	}
+	else{
+		if(viz.auth.isPubkey(code)){
+			page.find('.invites-claim-error').html(ltmp_arr.invites_claim_code_not_private);
+		}
+		else{
+			page.find('.invites-claim-error').html(ltmp_arr.invites_claim_code_incorrect);
+		}
+		page.find('.invites-claim-action').removeAttr('disabled');
+		page.find('.invites-use-action').removeAttr('disabled');
+		page.find('.submit-button-ring[rel=claim]').css('display','none');
+	}
+}
+function cancel_fund_request(req_id,el){
+	let page=$(el).closest('.page');
+	var ask=confirm('Вы уверены, что хотите отменить заявку?');
+	if(true==ask){
+		viz.broadcast.committeeWorkerCancelRequest(users[current_user].active_key,current_user,parseInt(req_id),function(err,result){
+			if(!err){
+				page.find('.fund-vote-request-success').html('Вы отменили заявку');
+
+				//update request votes
+				setTimeout(update_fund_request,3000,req_id,true,true);
+			}
+			else{
+				page.find('.fund-vote-request-error').html(ltmp_arr.default_operation_error);
+
+				console.log(err);
+			}
+		});
 	}
 }
 function fund_vote_request(req_id,percent,el){
@@ -3343,7 +3736,7 @@ function set_paid_subscribe(provider,level,amount,period,auto_renewal,agreement,
 			page.find('.icon-check').css('display','inline-block');
 
 			//update balances info
-			update_balances($('.page-invites .account-balance'));
+			update_balances($('.page-checks .account-balance'));
 		}
 		else{
 			page.find('.paid-subscribe-error').html(ltmp_arr.default_node_error);
@@ -3365,17 +3758,35 @@ function set_paid_subscribe(provider,level,amount,period,auto_renewal,agreement,
 function create_paid_subscribe(url_summary,levels,amount,period,agreement,el){
 	let page=$(el).closest('.page');
 	page.find('.create-paid-subscribe-action').attr('disabled','disabled');
+	page.find('.cancel-paid-subscribe-action').attr('disabled','disabled');
 	page.find('.icon-check').css('display','none');
-	page.find('.submit-button-ring').css('display','inline-block');
+	page.find('.submit-button-ring').css('display','none');
+	if(agreement){
+		page.find('.submit-button-ring[rel=create]').css('display','inline-block');
+	}
+	else{
+		page.find('.submit-button-ring[rel=cancel]').css('display','inline-block');
+	}
 
 	page.find('.create-paid-subscribe-error').html('');
 	page.find('.create-paid-subscribe-success').html('');
+	if('block'==page.find('.fee-checkbox').css('display')){
+		if(!page.find('.fee-checkbox input[name="create-paid-subscribe-fee"]').prop('checked')){
+			page.find('.create-paid-subscribe-error').html('Подтвердите согласие с взимаемой комиссией');
+
+			page.find('.create-paid-subscribe-action').removeAttr('disabled');
+			page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
+			page.find('.submit-button-ring').css('display','none');
+			return;
+		}
+	}
 	if(''==url_summary){
 		page.find('input[name=create-paid-subscribe-url]').addClass('red');
 		page.find('input[name=create-paid-subscribe-url]').focus();
 		page.find('.create-paid-subscribe-error').html('Вы не указали условия соглашения');
 
 		page.find('.create-paid-subscribe-action').removeAttr('disabled');
+		page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
 		page.find('.submit-button-ring').css('display','none');
 		return;
 	}
@@ -3389,6 +3800,7 @@ function create_paid_subscribe(url_summary,levels,amount,period,agreement,el){
 			page.find('.create-paid-subscribe-error').html('Количество уровней должно быть положительным числом');
 
 			page.find('.create-paid-subscribe-action').removeAttr('disabled');
+			page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
 			page.find('.submit-button-ring').css('display','none');
 			return;
 		}
@@ -3401,6 +3813,7 @@ function create_paid_subscribe(url_summary,levels,amount,period,agreement,el){
 			page.find('.transfer-error').html('Проверьте стоимость');
 
 			page.find('.create-paid-subscribe-action').removeAttr('disabled');
+			page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
 			page.find('.submit-button-ring').css('display','none');
 			return;
 		}
@@ -3411,6 +3824,7 @@ function create_paid_subscribe(url_summary,levels,amount,period,agreement,el){
 		page.find('.create-paid-subscribe-error').html('Проверьте стоимость');
 
 		page.find('.create-paid-subscribe-action').removeAttr('disabled');
+		page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
 		page.find('.submit-button-ring').css('display','none');
 		return;
 	}
@@ -3421,6 +3835,7 @@ function create_paid_subscribe(url_summary,levels,amount,period,agreement,el){
 		page.find('.create-paid-subscribe-error').html('Проверьте стоимость');
 
 		page.find('.create-paid-subscribe-action').removeAttr('disabled');
+		page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
 		page.find('.submit-button-ring').css('display','none');
 		return;
 	}
@@ -3430,6 +3845,7 @@ function create_paid_subscribe(url_summary,levels,amount,period,agreement,el){
 		page.find('.create-paid-subscribe-error').html('Период действия соглашения должен быть положительным числом');
 
 		page.find('.create-paid-subscribe-action').removeAttr('disabled');
+		page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
 		page.find('.submit-button-ring').css('display','none');
 		return;
 	}
@@ -3437,16 +3853,23 @@ function create_paid_subscribe(url_summary,levels,amount,period,agreement,el){
 	fixed_amount=fixed_amount+' VIZ';
 	viz.broadcast.setPaidSubscription(users[current_user].active_key,current_user,url_summary,levels,fixed_amount,period,function(err,result){
 		if(!err){
-			page.find('.create-paid-subscribe-success').html('Операция успешно выполнена. Подписка появится в списке доступных через несколько минут.');
-
-			page.find('.create-paid-subscribe-action').removeAttr('disabled');
+			if(agreement){
+				page.find('.create-paid-subscribe-success').html('Операция успешно выполнена. Подписка появится в списке доступных через несколько минут.');
+				page.find('.icon-check[rel=create]').css('display','inline-block');
+			}
+			else{
+				page.find('.create-paid-subscribe-success').html('Операция успешно выполнена. Подписка остановлена.');
+				page.find('.icon-check[rel=cancel]').css('display','inline-block');
+			}
 			page.find('.submit-button-ring').css('display','none');
-			page.find('.icon-check').css('display','inline-block');
+			page.find('.create-paid-subscribe-action').removeAttr('disabled');
+			page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
 		}
 		else{
 			page.find('.create-paid-subscribe-error').html(ltmp_arr.default_node_error);
 
 			page.find('.create-paid-subscribe-action').removeAttr('disabled');
+			page.find('.cancel-paid-subscribe-action').removeAttr('disabled');
 			page.find('.submit-button-ring').css('display','none');
 
 			console.log(err);
@@ -3475,6 +3898,7 @@ function award(account,energy,memo,el){
 		return;
 	}
 
+	energy=fast_str_replace(',','.',energy);
 	energy=parseFloat(energy).toFixed(2);
 	energy=energy*100;
 	page.find('input[name=award-energy]').removeClass('red');
@@ -3577,10 +4001,10 @@ function create_invite(amount,el){
 
 			page.find('.invites-create').removeClass('hidden');
 			page.find('.invites-create').html('<p>Чек на '+show_balance_in_tokens(fixed_tokens_amount,true)+', код погашения: '+private_key+'</p>');
-			download('viz-invite.txt','my.VIZ.plus\r\n\r\Invite balance: '+fixed_tokens_amount+'\r\nActivation code: '+private_key+'');
+			download('viz-check.txt','my.VIZ.plus\r\n\r\Check balance: '+fixed_tokens_amount+'\r\nActivation code: '+private_key+'');
 
 			//update balances info
-			update_balances($('.page-invites .account-balance'));
+			update_balances($('.page-checks .account-balance'));
 		}
 		else{
 			page.find('.invites-create-error').html(ltmp_arr.default_operation_error);
@@ -3600,6 +4024,14 @@ function fund_create_request(url,worker,min,max,duration,el){
 
 	page.find('.fund-create-request-error').html('');
 	page.find('.fund-create-request-success').html('');
+
+	if(!page.find('.fee-checkbox input[name="committee-create-request-fee"]').prop('checked')){
+		page.find('.fund-create-request-error').html('Подтвердите согласие с взимаемой комиссией');
+
+		page.find('.fund-create-request-action').removeAttr('disabled');
+		page.find('.submit-button-ring').css('display','none');
+		return;
+	}
 
 	page.find('input[name=fund-create-request-min-amount]').removeClass('red');
 	min=min.replace(/[^0-9\,\.]/g,'');
@@ -3889,7 +4321,7 @@ function witness_set_props(el){
 					}
 				}
 			}
-			let props_version=2;//protocol properties version
+			let props_version=3;//protocol properties version
 			viz.broadcast.versionedChainPropertiesUpdate(users[current_user].active_key,current_user,[props_version,props],function(err,result){
 				if(!err){
 					page.find('.witness-set-props-success').html(ltmp_arr.witness_set_props_success);
@@ -3924,6 +4356,17 @@ function witness_setup(url,public_key,private_key,el){
 
 	page.find('.witness-setup-error').html('');
 	page.find('.witness-setup-success').html('');
+
+	if('block'==page.find('.fee-checkbox').css('display')){
+		if(!page.find('.fee-checkbox input[name="witness-declaration-fee"]').prop('checked')){
+			page.find('.witness-setup-error').html('Подтвердите согласие с взимаемой комиссией');
+
+			page.find('.witness-setup-action').removeAttr('disabled');
+			page.find('.submit-button-ring').css('display','none');
+			return;
+		}
+	}
+
 	if(''==url){
 		page.find('.witness-setup-error').html('Заполните поле ссылки на заявление делегата');
 		page.find('.witness-setup-action').removeAttr('disabled');
@@ -4277,6 +4720,16 @@ function set_account_price(account,master_key,seller,offer_price,on_sale,el){
 	el.find('.sell-account-action').attr('disabled','disabled');
 	el.find('.icon-check').css('display','none');
 	el.find('.submit-button-ring').css('display','inline-block');
+
+	if('block'==el.find('.fee-checkbox').css('display')){
+		if(!el.find('.fee-checkbox input[name="account-on-sale-fee"]').prop('checked')){
+			el.find('.sell-account-error').html('Подтвердите согласие с взимаемой комиссией');
+
+			el.find('.sell-account-action').removeAttr('disabled');
+			el.find('.submit-button-ring').css('display','none');
+			return;
+		}
+	}
 	if(''==offer_price){
 		offer_price=0;
 	}
@@ -4416,15 +4869,18 @@ function manage_access_save(account,master_key,el){
 		}
 	}
 
-	txt_to_save='my.VIZ.plus\r\n\r\n';
-	txt_to_save+='Account: '+account+'\r\n\r\n';
-	txt_to_save+='New authorites\r\n';
-	html_to_show='<p class="captions">Account: <strong>'+account+'</strong></p>';
-	for(i in to_save){
-		txt_to_save+=to_save[i][0]+': '+to_save[i][1]+'\r\n';
-		html_to_show+='<p class="captions">'+to_save[i][0]+': <strong>'+to_save[i][1]+'</strong></p>';
+	let txt_to_save='';
+	if(0<to_save.length){
+		txt_to_save='my.VIZ.plus\r\n\r\n';
+		txt_to_save+='Account: '+account+'\r\n\r\n';
+		txt_to_save+='New authorites\r\n';
+		html_to_show='<p class="captions">Account: <strong>'+account+'</strong></p>';
+		for(i in to_save){
+			txt_to_save+=to_save[i][0]+': '+to_save[i][1]+'\r\n';
+			html_to_show+='<p class="captions">'+to_save[i][0]+': <strong>'+to_save[i][1]+'</strong></p>';
+		}
+		txt_to_save=txt_to_save.trim();
 	}
-	txt_to_save=txt_to_save.trim();
 
 	el.find('.manage-access-save-action').attr('disabled','disabled');
 	el.find('.icon-check[rel=save]').css('display','none');
@@ -4432,7 +4888,7 @@ function manage_access_save(account,master_key,el){
 
 	viz.broadcast.accountUpdate(master_key,account,master,active,regular,memo_key,json_metadata,function(err,result){
 		if(result){
-			el.find('.manage-access-save-success').html(ltmp_arr.access_saved_successfully);
+			el.find('.manage-access-save-success').html(ltmp_arr.access_saved_successfully+(0<to_save.length?ltmp_arr.access_save_keys:''));
 			el.find('.manage-access-save-error').html('');
 
 			el.find('.submit-button-ring[rel=save]').css('display','none');
@@ -4440,9 +4896,10 @@ function manage_access_save(account,master_key,el){
 			el.find('input[name=manage-access-master-key]').val('');
 			el.find('.manage-access-save-action').removeAttr('disabled');
 
-			el.find('.manage-access-new-keys').html(html_to_show);
-
-			download('viz-access.txt',txt_to_save);
+			if(0<to_save.length){
+				el.find('.manage-access-new-keys').html(html_to_show);
+				download('viz-access.txt',txt_to_save);
+			}
 		}
 		else{
 			el.find('.manage-access-save-error').html(ltmp_arr.access_error);
@@ -4599,6 +5056,178 @@ function manage_access_preload(account,el){
 		}
 	});
 }
+function save_profile(el){
+	el.find('.manage-profile-error').html('');
+	el.find('.manage-profile-success').html('');
+	el.find('.manage-profile-action').attr('disabled','disabled');
+	el.find('.icon-check').css('display','none');
+	el.find('.submit-button-ring').css('display','inline-block');
+
+	viz.api.getAccounts([current_user],function(err,response){
+		if(err){
+			el.find('.manage-profile-error').html('<p class="red">'+ltmp_arr.default_node_not_respond+'</p>');
+		}
+		else{
+			if(typeof response[0] !== 'undefined'){
+				if(current_user==response[0].name){
+					let json_metadata={};
+					if(''!=response[0].json_metadata){
+						json_metadata=JSON.parse(response[0].json_metadata);
+					}
+					console.log(json_metadata);
+					if(typeof json_metadata.profile === 'undefined'){
+						json_metadata.profile={};
+					}
+					json_metadata.profile.nickname=el.find('input[name=manage-profile-nickname]').val().trim();
+					json_metadata.profile.about=el.find('input[name=manage-profile-about]').val().trim();
+					json_metadata.profile.avatar=el.find('input[name=manage-profile-avatar]').val().trim();
+					json_metadata.profile.gender=el.find('select[name=manage-profile-gender]').val().trim();
+
+					json_metadata.profile.location=el.find('input[name=manage-profile-location]').val().trim();
+					json_metadata.profile.interests=el.find('input[name=manage-profile-interests]').val().trim().split(',');
+
+					for(var i=0;i<json_metadata.profile.interests.length;i++){
+						json_metadata.profile.interests[i] = json_metadata.profile.interests[i].trim();
+					}
+					for(var i=(json_metadata.profile.interests.length - 1);i>0;--i){
+						if(''==json_metadata.profile.interests[i]){
+							json_metadata.profile.interests.splice(i,1);
+						}
+					}
+					if(json_metadata.profile.interests.length==0){
+						delete json_metadata.profile.interests;
+					}
+
+					json_metadata.profile.site=el.find('input[name=manage-profile-site]').val().trim();
+					json_metadata.profile.mail=el.find('input[name=manage-profile-mail]').val().trim();
+					if(typeof json_metadata.profile.services === 'undefined'){
+						json_metadata.profile.services={};
+					}
+					json_metadata.profile.services={};
+
+					if(''==el.find('input[name=manage-profile-facebook]').val().trim()){
+						if(typeof json_metadata.profile.services.facebook !== 'undefined'){
+							delete json_metadata.profile.services.facebook;
+						}
+					}
+					else{
+						json_metadata.profile.services.facebook=el.find('input[name=manage-profile-facebook]').val().trim();
+					}
+
+					if(''==el.find('input[name=manage-profile-instagram]').val().trim()){
+						if(typeof json_metadata.profile.services.instagram !== 'undefined'){
+							delete json_metadata.profile.services.instagram;
+						}
+					}
+					else{
+						json_metadata.profile.services.instagram=el.find('input[name=manage-profile-instagram]').val().trim();
+					}
+
+					if(''==el.find('input[name=manage-profile-twitter]').val().trim()){
+						if(typeof json_metadata.profile.services.twitter !== 'undefined'){
+							delete json_metadata.profile.services.twitter;
+						}
+					}
+					else{
+						json_metadata.profile.services.twitter=el.find('input[name=manage-profile-twitter]').val().trim();
+					}
+
+					if(''==el.find('input[name=manage-profile-vk]').val().trim()){
+						if(typeof json_metadata.profile.services.vk !== 'undefined'){
+							delete json_metadata.profile.services.vk;
+						}
+					}
+					else{
+						json_metadata.profile.services.vk=el.find('input[name=manage-profile-vk]').val().trim();
+					}
+
+					if(''==el.find('input[name=manage-profile-telegram]').val().trim()){
+						if(typeof json_metadata.profile.services.telegram !== 'undefined'){
+							delete json_metadata.profile.services.telegram;
+						}
+					}
+					else{
+						json_metadata.profile.services.telegram=el.find('input[name=manage-profile-telegram]').val().trim();
+					}
+
+					if(''==el.find('input[name=manage-profile-skype]').val().trim()){
+						if(typeof json_metadata.profile.services.skype !== 'undefined'){
+							delete json_metadata.profile.services.skype;
+						}
+					}
+					else{
+						json_metadata.profile.services.skype=el.find('input[name=manage-profile-skype]').val().trim();
+					}
+
+					if(''==el.find('input[name=manage-profile-viber]').val().trim()){
+						if(typeof json_metadata.profile.services.viber !== 'undefined'){
+							delete json_metadata.profile.services.viber;
+						}
+					}
+					else{
+						json_metadata.profile.services.viber=el.find('input[name=manage-profile-viber]').val().trim();
+					}
+
+					if(''==el.find('input[name=manage-profile-whatsapp]').val().trim()){
+						if(typeof json_metadata.profile.services.whatsapp !== 'undefined'){
+							delete json_metadata.profile.services.whatsapp;
+						}
+					}
+					else{
+						json_metadata.profile.services.whatsapp=el.find('input[name=manage-profile-whatsapp]').val().trim();
+					}
+
+					if(Object.keys(json_metadata.profile.services).length==0){
+						delete json_metadata.profile.services;
+					}
+
+					if(''==json_metadata.profile.location){
+						delete json_metadata.profile.location;
+					}
+					if(''==json_metadata.profile.site){
+						delete json_metadata.profile.site;
+					}
+					if(''==json_metadata.profile.mail){
+						delete json_metadata.profile.mail;
+					}
+
+					let new_json_metadata=JSON.stringify(json_metadata);
+
+					console.log(new_json_metadata);
+					viz.broadcast.accountMetadata(users[current_user].active_key,current_user,new_json_metadata,function(err,result){
+						if(result){
+							el.find('.manage-profile-success').html(ltmp_arr.save_profile_success);
+							el.find('.manage-profile-error').html('');
+
+							el.find('.submit-button-ring').css('display','none');
+							el.find('.icon-check').css('display','inline-block');
+							el.find('.manage-profile-action').removeAttr('disabled');
+
+						}
+						else{
+							el.find('.manage-profile-error').html(ltmp_arr.default_operation_error);
+							el.find('.submit-button-ring').css('display','none');
+							el.find('.manage-profile-action').removeAttr('disabled');
+
+							console.log(err);
+						}
+					});
+				}
+				else{
+					el.find('.manage-profile-error').html(ltmp_arr.default_account_not_found_or_incorrect_response);
+					el.find('.submit-button-ring').css('display','none');
+					el.find('.manage-profile-action').removeAttr('disabled');
+				}
+			}
+			else{
+				el.find('.manage-profile-error').html(ltmp_arr.default_account_not_found_or_incorrect_response);
+				el.find('.submit-button-ring').css('display','none');
+				el.find('.manage-profile-action').removeAttr('disabled');
+			}
+		}
+	});
+	let nickname=$('.page-manage-profile input[name=manage-profile-nickname]').val().trim();
+}
 function reset_access(account,master_key,el){
 	if(!viz.auth.isWif(master_key)){
 		el.find('.reset-access-error').html(ltmp_arr.default_invalid_master_key);
@@ -4683,6 +5312,16 @@ function set_subaccount_price(account,master_key,seller,offer_price,on_sale,el){
 	el.find('.sell-subaccount-action').attr('disabled','disabled');
 	el.find('.icon-check').css('display','none');
 	el.find('.submit-button-ring').css('display','inline-block');
+
+	if('block'==el.find('.fee-checkbox').css('display')){
+		if(!el.find('.fee-checkbox input[name="subaccount-on-sale-fee"]').prop('checked')){
+			el.find('.sell-subaccount-error').html('Подтвердите согласие с взимаемой комиссией');
+
+			el.find('.sell-subaccount-action').removeAttr('disabled');
+			el.find('.submit-button-ring').css('display','none');
+			return;
+		}
+	}
 	if(''==offer_price){
 		offer_price=0;
 	}
@@ -4887,6 +5526,10 @@ function app_mouse(e){
 		let amount=parseFloat($(target).attr('data-raw'));
 		$('.page-transfer input[name=transfer-tokens-amount]').val(amount);
 	}
+	if($(target).hasClass('create-invite-min-balance')){
+		let amount=parseFloat($(target).text());
+		$('.page-checks input[name=invites-create-amount]').val(parseFloat(amount));
+	}
 	if($(target).hasClass('show-inactive-witnesses-action')){
 		$(target).addClass('hidden');
 		$(target).parent().next('.inactive-witnesses').removeClass('hidden');
@@ -4907,6 +5550,24 @@ function app_mouse(e){
 			return;
 		}
 	}
+	if($(target).hasClass('cancel-paid-subscribe-action')){
+		let descr=$('.page-create-paid-subscribe input[name=create-paid-subscribe-descr]').val().trim();
+		let url=$('.page-create-paid-subscribe input[name=create-paid-subscribe-url]').val().trim();
+		let url_summary=descr+' '+url;
+		url_summary=url_summary.trim();
+		let levels=parseInt($('.page-create-paid-subscribe input[name=create-paid-subscribe-levels]').val());
+		let amount=$('.page-create-paid-subscribe input[name=create-paid-subscribe-amount]').val().trim();
+		let period=parseInt($('.page-create-paid-subscribe input[name=create-paid-subscribe-period]').val());
+		create_paid_subscribe(url_summary,levels,amount,period,false,target);
+		/*
+		if(typeof $('.page-create-paid-subscribe input[name=create-paid-subscribe-agreement]:checked').val() != 'undefined'){
+			//let agreement=('true'==$('.page-create-paid-subscribe input[name=create-paid-subscribe-agreement]:checked').val());
+		}
+		else{
+			$('.page-create-paid-subscribe .create-paid-subscribe-error').html(ltmp_arr.ps_need_sign_agreement);
+		}
+		*/
+	}
 	if($(target).hasClass('create-paid-subscribe-action')){
 		let descr=$('.page-create-paid-subscribe input[name=create-paid-subscribe-descr]').val().trim();
 		let url=$('.page-create-paid-subscribe input[name=create-paid-subscribe-url]').val().trim();
@@ -4915,9 +5576,11 @@ function app_mouse(e){
 		let levels=parseInt($('.page-create-paid-subscribe input[name=create-paid-subscribe-levels]').val());
 		let amount=$('.page-create-paid-subscribe input[name=create-paid-subscribe-amount]').val().trim();
 		let period=parseInt($('.page-create-paid-subscribe input[name=create-paid-subscribe-period]').val());
-		if(typeof $('.page-create-paid-subscribe input[name=create-paid-subscribe-agreement]:checked').val() != 'undefined'){
-			let agreement=('true'==$('.page-create-paid-subscribe input[name=create-paid-subscribe-agreement]:checked').val());
-			create_paid_subscribe(url_summary,levels,amount,period,agreement,target);
+		let agreement=$('.page-create-paid-subscribe input[name="create-paid-subscribe-agreement"]').prop('checked');
+		//if(typeof $('.page-create-paid-subscribe input[name=create-paid-subscribe-agreement]:checked').val() != 'undefined'){
+			//let agreement=('true'==$('.page-create-paid-subscribe input[name=create-paid-subscribe-agreement]:checked').val());
+		if(agreement){
+			create_paid_subscribe(url_summary,levels,amount,period,true,target);
 		}
 		else{
 			$('.page-create-paid-subscribe .create-paid-subscribe-error').html(ltmp_arr.ps_need_sign_agreement);
@@ -4960,6 +5623,10 @@ function app_mouse(e){
 	if($(target).hasClass('remove-api-node')){
 		let node=$(target).attr('rel');
 		remove_api_node(node);
+	}
+	if($(target).hasClass('cancel-fund-request-action')){
+		let req_id=parseInt($('.page-fund-requests .section-fund-request').attr('data-id'));
+		cancel_fund_request(req_id,$('.page-fund-requests .section-fund-request .cancel-fund-request-action'));
 	}
 	if($(target).hasClass('fund-vote-request-action')){
 		let req_id=parseInt($('.page-fund-requests .section-fund-request').attr('data-id'));
@@ -5015,7 +5682,7 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('view-key')){
 		let page=$(target).closest('.page');
-		if(page.hasClass('page-invites')){
+		if(page.hasClass('page-checks')){
 			page.find('input[name=invites-claim-code]').val($(target).html());
 			page.find('input[name=invites-claim-code]').keyup();
 			page.find('input[name=invites-claim-code]').change();
@@ -5023,7 +5690,7 @@ function app_mouse(e){
 	}
 	if($(target).hasClass('view-tokens')){
 		let page=$(target).closest('.page');
-		if(page.hasClass('page-invites')){
+		if(page.hasClass('page-checks')){
 			page.find('input[name=invites-create-amount]').val($(target).html());
 			page.find('input[name=invites-create-amount]').keyup();
 			page.find('input[name=invites-create-amount]').change();
@@ -5083,12 +5750,59 @@ function app_mouse(e){
 		fund_create_request(url_summary,worker,min,max,duration,$('.page-fund-create-request .fund-create-request-action'));
 	}
 	if($(target).hasClass('invites-create-action')){
-		let amount=$('.page-invites input[name=invites-create-amount]').val().trim();
+		let amount=$('.page-checks input[name=invites-create-amount]').val().trim();
 		create_invite(amount,target);
 	}
 	if($(target).hasClass('invites-claim-action')){
-		let code=$('.page-invites input[name=invites-claim-code]').val().trim();
+		let code=$('.page-checks input[name=invites-claim-code]').val().trim();
 		claim_invite(code,target);
+	}
+	if($(target).hasClass('invites-use-action')){
+		let code=$('.page-checks input[name=invites-claim-code]').val().trim();
+		use_invite(code,target);
+	}
+	if($(target).hasClass('activate-viz-dollars-action')){
+		var error=false;
+		var account=current_user;
+		var code=$('.page-stake-shares input[name=activate-viz-dollars-code]').val().trim();
+		$(target).attr('disabled','disabled');
+		$('.page-stake-shares .submit-button-ring[rel=activate-viz-dollars]').css('display','inline-block');
+		$('.page-stake-shares .icon-check[rel=activate-viz-dollars]').css('display','none');
+		$('.page-stake-shares .activate-viz-dollars-error').html('');
+		$('.page-stake-shares .activate-viz-dollars-success').html('');
+		$.ajax({
+			type:'POST',
+			url:'https://start.viz.plus/ajax/claim-code/',
+			data:{account_login:account,code},
+			success:function(result){
+				result_json=JSON.parse(result);
+				if('too much attempts'==result_json.result){
+					error=ltmp_arr.deposit_too_much_attempts;
+					$('.page-stake-shares .activate-viz-dollars-error').html(error);
+				}
+				if('claimed code'==result_json.result){
+					error=ltmp_arr.deposit_claimed_code;
+					$('.page-stake-shares .activate-viz-dollars-error').html(error);
+				}
+				if('incorrect code'==result_json.result){
+					error=ltmp_arr.deposit_incorrect_code;
+					$('.page-stake-shares .activate-viz-dollars-error').html(error);
+				}
+				if('broadcast error'==result_json.result){
+					error=ltmp_arr.deposit_broadcast_error;
+					$('.page-stake-shares .activate-viz-dollars-error').html(error);
+				}
+				if('success'==result_json.result){
+					$('.page-stake-shares .activate-viz-dollars-error').html('');
+					$('.page-stake-shares .activate-viz-dollars-success').html(ltmp_arr.deposit_success);
+
+					update_balances($('.page-stake-shares .account-balance'));
+					$('.page-stake-shares .icon-check[rel=activate-viz-dollars]').css('display','inline-block');
+				}
+				$(target).removeAttr('disabled');
+				$('.page-stake-shares .submit-button-ring[rel=activate-viz-dollars]').css('display','none');
+			},
+		});
 	}
 	if($(target).hasClass('deposit-action')){
 		var error=false;
@@ -5202,6 +5916,9 @@ function app_mouse(e){
 			let on_sale=('true'==$('.page-sell-account input[name=set-account-on-sale]:checked').val())
 			set_account_price(account,master_key,seller,offer_price,on_sale,$('.page-sell-account'));
 		}
+	}
+	if($(target).hasClass('manage-profile-action')){
+		save_profile($('.page-manage-profile'));
 	}
 	if($(target).hasClass('reset-access-action')){
 		let account=$('.page-reset-access input[name=reset-access-login]').val().toLowerCase().trim();
@@ -5630,13 +6347,17 @@ $(document).ready(function(){
 			let other=$('.page-unstake-shares input[name=unstake-shares-tokens-left]');
 			let shares=$('.page-unstake-shares .shares-balance .vesting-shares').attr('data-available-vesting-shares');
 			let all_shares=$('.page-unstake-shares .shares-balance .vesting-shares').attr('data-vesting-shares');
+			let withdraw_intervals=28;
+			if(!isNaN(parseInt($('.page-unstake-shares .median-props[rel="withdraw_intervals"]').text()))){
+				withdraw_intervals=parseInt($('.page-unstake-shares .median-props[rel="withdraw_intervals"]').text());
+			}
 			if(typeof shares != 'undefined'){
 				let calc_result=parseFloat(shares);
 				if(value>calc_result){
 					value=calc_result;
 					$(this).val(value);
 				}
-				let partition=parseFloat(parseFloat(shares)/28).toFixed(2);
+				let partition=parseFloat(parseFloat(shares)/withdraw_intervals).toFixed(2);
 
 				let percent=parseInt(value*100/calc_result);
 				range_slider.find('.range-slider-input').val(percent);
@@ -5656,8 +6377,8 @@ $(document).ready(function(){
 				if(isNaN(duration)){
 					duration=0;
 				}
-				if(duration>28){
-					duration=28;
+				if(duration>withdraw_intervals){
+					duration=withdraw_intervals;
 				}
 				$('.page-unstake-shares .unstake-shares-duration').html(duration+plural_str(duration,ltmp_arr.plural_days_1,ltmp_arr.plural_days_2,ltmp_arr.plural_days_5));
 			}
@@ -5676,13 +6397,17 @@ $(document).ready(function(){
 			let other=$('.page-unstake-shares input[name=unstake-shares-tokens-amount]');
 			let shares=$('.page-unstake-shares .shares-balance .vesting-shares').attr('data-available-vesting-shares');
 			let all_shares=$('.page-unstake-shares .shares-balance .vesting-shares').attr('data-vesting-shares');
+			let withdraw_intervals=28;
+			if(!isNaN(parseInt($('.page-unstake-shares .median-props[rel="withdraw_intervals"]').text()))){
+				withdraw_intervals=parseInt($('.page-unstake-shares .median-props[rel="withdraw_intervals"]').text());
+			}
 			if(typeof shares != 'undefined'){
 				let calc_result=parseFloat(shares);
 				if(value>calc_result){
 					value=calc_result;
 					$(this).val(value);
 				}
-				let partition=parseFloat(parseFloat(shares)/28).toFixed(2);
+				let partition=parseFloat(parseFloat(shares)/withdraw_intervals).toFixed(2);
 
 				let percent=parseInt(value*100/calc_result);
 				range_slider.find('.range-slider-input').val(percent);
@@ -5702,8 +6427,8 @@ $(document).ready(function(){
 				if(isNaN(duration)){
 					duration=0;
 				}
-				if(duration>28){
-					duration=28;
+				if(duration>withdraw_intervals){
+					duration=withdraw_intervals;
 				}
 				$('.page-unstake-shares .unstake-shares-duration').html(duration+plural_str(duration,ltmp_arr.plural_days_1,ltmp_arr.plural_days_2,ltmp_arr.plural_days_5));
 			}
@@ -5740,9 +6465,9 @@ $(document).ready(function(){
 		}
 	});
 
-	$('.page-invites input[name=invites-claim-code]').on('keyup',function(){
+	$('.page-checks input[name=invites-claim-code]').on('keyup',function(){
 		clearTimeout(check_invite_timer);
-		check_invite_timer=setTimeout(check_invite,500,$(this).val(),$('.page-invites .invites-claim-code-caption'));
+		check_invite_timer=setTimeout(check_invite,500,$(this).val(),$('.page-checks .invites-claim-code-caption'));
 	});
 
 	$('.page-award input[name=award-energy]').on('keyup',function(){
